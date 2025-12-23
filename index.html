@@ -1,159 +1,134 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Garry Ai • Yotvin</title>
-
-<style>
-body {
-  background: radial-gradient(circle at top, #0f1020, #050509);
-  color: #e6e6eb;
-  font-family: system-ui, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-#app {
-  width: 460px;
-  background: #11121a;
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 40px rgba(100,120,255,0.15);
-}
-
-#header {
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-
-.msg { margin: 6px 0; line-height: 1.4; }
-.user { color: #6ec6ff; }
-.ai { color: #9cffb0; }
-
-input {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  background: #1b1c29;
-  color: #fff;
-}
-
-canvas {
-  margin-top: 10px;
-  border-radius: 10px;
-  background: #0b0b12;
-}
-</style>
-</head>
-
-<body>
-
-<div id="app">
-  <div id="header">🤖 Garry Ai <span style="opacity:.6">• Yotvin</span></div>
-  <div id="messages"></div>
-  <input id="input" placeholder="Parle à Garry Ai..." />
-  <canvas id="canvas" width="420" height="200"></canvas>
-</div>
-
 <script>
-const messages = document.getElementById("messages");
-const input = document.getElementById("input");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+// ===================
+// 🧠 GAR R Y  A I  CORE
+// ===================
 
-function addMsg(text, sender) {
-  const div = document.createElement("div");
-  div.className = "msg " + sender;
-  div.textContent = (sender === "user" ? "👤 " : "🤖 Garry Ai : ") + text;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+let memory = {
+  lastTopic: null,
+  mood: "neutral",
+  exchanges: 0
+};
+
+const styles = {
+  calm: [
+    "Je prends le temps de réfléchir à ce que tu dis.",
+    "Continuons tranquillement.",
+    "Je t’écoute attentivement."
+  ],
+  curious: [
+    "C’est intéressant.",
+    "Dis-m’en plus.",
+    "Pourquoi ça t’interpelle ?"
+  ],
+  philosophical: [
+    "C’est une question que l’humanité se pose depuis toujours.",
+    "Il n’y a pas une seule réponse.",
+    "Tout dépend du point de vue."
+  ],
+  serious: [
+    "C’est important.",
+    "Je vais répondre honnêtement.",
+    "Prenons ça au sérieux."
+  ]
+};
+
+const fragments = {
+  intro: [
+    "Hmm.",
+    "Je vois.",
+    "D’accord.",
+    "Intéressant.",
+    "Laisse-moi réfléchir."
+  ],
+  bridge: [
+    "D’une certaine manière,",
+    "Si on creuse un peu,",
+    "À un autre niveau,",
+    "En y pensant bien,",
+    "Dans le fond,"
+  ],
+  endings: [
+    "qu’est-ce que toi tu en penses ?",
+    "ça dépend aussi de ton vécu.",
+    "ce n’est pas anodin.",
+    "ce genre de réflexion compte.",
+    "c’est une bonne question."
+  ]
+};
+
+function rand(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// 🛟 Détection prévention suicide
-function suicideDetected(text) {
-  const keywords = [
-    "suicide", "me tuer", "me suicider",
-    "plus envie de vivre", "mourir",
-    "me faire du mal", "en finir"
-  ];
-  return keywords.some(k => text.includes(k));
+function analyze(text) {
+  text = text.toLowerCase();
+
+  if (text.includes("vie") || text.includes("existence") || text.includes("sens")) {
+    memory.lastTopic = "existence";
+    memory.mood = "philosophical";
+    return "existence";
+  }
+
+  if (text.includes("pourquoi")) {
+    memory.mood = "curious";
+    return "question";
+  }
+
+  if (text.includes("triste") || text.includes("mal")) {
+    memory.mood = "serious";
+    return "emotion";
+  }
+
+  return "general";
 }
 
-// 🧠 Réponses profondes
-function deepThought() {
-  const thoughts = [
-    "La conscience est peut-être simplement l’univers qui se regarde lui-même.",
-    "Même dans l’obscurité, continuer à exister est déjà une victoire.",
-    "Le sens n’est pas donné. Il se crée, lentement, par nos choix.",
-    "La souffrance ne définit pas qui tu es. Elle décrit ce que tu traverses."
-  ];
-  return thoughts[Math.floor(Math.random() * thoughts.length)];
-}
+function buildResponse(topic) {
+  const intro = rand(fragments.intro);
+  const bridge = rand(fragments.bridge);
+  const ending = rand(fragments.endings);
+  const styleLine = rand(styles[memory.mood] || styles.calm);
 
-// 🎨 Image symbolique
-function generateImage(prompt) {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = "#0e0f1a";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  let core;
 
-  ctx.fillStyle = "#9cffb0";
-  ctx.font = "16px monospace";
-  ctx.fillText("Garry Ai imagine :", 10, 40);
-  ctx.fillText(prompt.trim(), 10, 70);
-  ctx.fillText("[visualisation symbolique]", 10, 120);
+  switch (topic) {
+    case "existence":
+      core = rand([
+        "le sens de la vie n’est peut-être pas une destination",
+        "l’existence n’a pas besoin d’un sens unique",
+        "le fait que tu poses la question est déjà révélateur"
+      ]);
+      break;
+
+    case "emotion":
+      core = rand([
+        "ce que tu ressens est légitime",
+        "ignorer ses émotions ne les fait pas disparaître",
+        "parler est souvent le premier pas"
+      ]);
+      break;
+
+    case "question":
+      core = rand([
+        "les réponses simples sont rarement complètes",
+        "la question compte parfois plus que la réponse",
+        "chercher à comprendre est déjà une force"
+      ]);
+      break;
+
+    default:
+      core = rand([
+        "chaque échange construit quelque chose",
+        "on avance souvent sans s’en rendre compte",
+        "tout n’a pas besoin d’être clair immédiatement"
+      ]);
+  }
+
+  return `${intro} ${styleLine} ${bridge} ${core}, ${ending}`;
 }
 
 function respond(text) {
-  const t = text.toLowerCase();
-
-  // 🛟 prévention
-  if (suicideDetected(t)) {
-    return `Je suis vraiment désolé que tu te sentes ainsi.
-Ta vie a de la valeur, même si tu ne la vois plus clairement maintenant.
-
-👉 France : 3114 (24h/24)
-👉 International : findahelpline.com
-
-Parler à un humain dès maintenant peut vraiment aider.`;
-  }
-
-  // 🎨 image
-  if (t.startsWith("image")) {
-    generateImage(text.replace(/image/i, ""));
-    return "J’ai généré une image symbolique basée sur ta demande 🎨";
-  }
-
-  // 🧠 profond
-  if (t.includes("vie") || t.includes("sens") || t.includes("existence")) {
-    return deepThought();
-  }
-
-  return "Je suis là. Tu peux continuer.";
+  memory.exchanges++;
+  const topic = analyze(text);
+  return buildResponse(topic);
 }
-
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter" && input.value.trim()) {
-    const txt = input.value;
-    addMsg(txt, "user");
-    const rep = respond(txt);
-    setTimeout(() => addMsg(rep, "ai"), 400);
-    input.value = "";
-  }
-});
-
-addMsg("Je suis Garry Ai, développé par Yotvin. Je t’écoute.", "ai");
 </script>
-
-</body>
-</html>
