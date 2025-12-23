@@ -4,66 +4,57 @@
 <meta charset="UTF-8">
 <title>Garry Ai • Yotvin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body {
   margin: 0;
-  height: 100vh;
-  background: linear-gradient(135deg, #05060f, #0b0c1a);
+  background: radial-gradient(circle at top, #0b0d1f, #04050c);
   font-family: system-ui, sans-serif;
-  color: #eaeaf0;
+  color: #e8e8f0;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;
 }
-
 #app {
-  width: 420px;
-  max-width: 95%;
-  height: 600px;
-  background: #0f1122;
+  width: 460px;
+  height: 620px;
+  background: #0f1124;
   border-radius: 16px;
-  box-shadow: 0 0 40px rgba(120,140,255,.25);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 0 40px rgba(120,140,255,.25);
 }
-
 #header {
   padding: 14px;
-  font-weight: bold;
   text-align: center;
-  border-bottom: 1px solid #1c1e3a;
+  font-weight: bold;
+  border-bottom: 1px solid #1e2145;
 }
-
 #messages {
   flex: 1;
   padding: 12px;
   overflow-y: auto;
 }
-
 .msg { margin-bottom: 10px; line-height: 1.4; }
-.user { color: #6ec6ff; }
+.user { color: #7cc7ff; }
 .ai { color: #9cffb0; }
-
 #inputBox {
-  border-top: 1px solid #1c1e3a;
+  border-top: 1px solid #1e2145;
   padding: 10px;
 }
-
 input {
   width: 100%;
   padding: 10px;
   border-radius: 10px;
   border: none;
   outline: none;
-  background: #1b1d3a;
+  background: #1b1d3d;
   color: white;
 }
 </style>
 </head>
 
 <body>
-
 <div id="app">
   <div id="header">🤖 Garry Ai <span style="opacity:.6">• Yotvin</span></div>
   <div id="messages"></div>
@@ -74,7 +65,62 @@ input {
 
 <script>
 // =====================
-// GAR R Y  A I  CORE
+// 🔒 MODÉRATION RACISME
+// =====================
+const banned = [
+  "sale juif","sale noir","sale arabe","sale blanc",
+  "nègre","nazi","hitler","exterminer","race supérieure"
+];
+
+function racistCheck(text) {
+  return banned.some(w => text.includes(w));
+}
+
+// =====================
+// 🧠 CORPUS (ENTRAÎNEMENT LOCAL)
+// =====================
+const corpus = `
+la conscience est une expérience subjective
+le sens de la vie n'est jamais figé
+penser c'est déjà exister
+le doute nourrit l'intelligence
+les émotions sont des signaux
+comprendre demande du temps
+l'humain cherche du sens
+la pensée évolue avec l'expérience
+parler permet de clarifier
+exister c'est ressentir
+`.trim().split(/\s+/);
+
+// =====================
+// 🧬 CHAÎNE DE MARKOV
+// =====================
+const markov = {};
+
+for (let i = 0; i < corpus.length - 1; i++) {
+  const w = corpus[i];
+  if (!markov[w]) markov[w] = [];
+  markov[w].push(corpus[i + 1]);
+}
+
+function generateSentence(length = 18) {
+  let word = corpus[Math.floor(Math.random() * corpus.length)];
+  let result = [word];
+
+  for (let i = 0; i < length; i++) {
+    const next = markov[word];
+    if (!next) break;
+    word = next[Math.floor(Math.random() * next.length)];
+    result.push(word);
+  }
+
+  let sentence = result.join(" ");
+  sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
+  return sentence + ".";
+}
+
+// =====================
+// 💬 INTERFACE
 // =====================
 const messages = document.getElementById("messages");
 const input = document.getElementById("input");
@@ -87,66 +133,26 @@ function add(text, cls) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-const suicideWords = [
-  "suicide","me tuer","mourir","en finir",
-  "plus envie de vivre","me faire du mal"
-];
-
-function suicideCheck(t) {
-  return suicideWords.some(w => t.includes(w));
-}
-
-const intros = [
-  "Hmm.", "Je vois.", "Intéressant.", "D’accord.", "Laisse-moi réfléchir."
-];
-
-const cores = [
-  "le sens n’est pas quelque chose qu’on trouve, mais qu’on construit",
-  "poser la question est souvent plus important que la réponse",
-  "ce que tu ressens compte, même si c’est confus",
-  "la conscience est peut-être une conversation continue",
-  "le doute fait partie de l’intelligence"
-];
-
-const endings = [
-  "Qu’est-ce que ça t’évoque ?",
-  "Comment tu le ressens, toi ?",
-  "On peut creuser si tu veux.",
-  "Ça mérite réflexion.",
-  "Rien n’oblige à avoir une réponse immédiate."
-];
-
-function rand(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function respond(text) {
-  const t = text.toLowerCase();
-
-  if (suicideCheck(t)) {
-    return `Je suis vraiment désolé que tu te sentes comme ça.
-Tu n’es pas seul.
-
-👉 France : 3114 (24h/24)
-👉 International : findahelpline.com
-
-Parler à quelqu’un maintenant peut vraiment aider.`;
-  }
-
-  return `${rand(intros)} ${rand(cores)}, ${rand(endings)}`;
-}
-
 input.addEventListener("keydown", e => {
   if (e.key === "Enter" && input.value.trim()) {
-    const txt = input.value;
-    add(txt, "user");
-    setTimeout(() => add(respond(txt), "ai"), 300);
+    const txt = input.value.toLowerCase();
+    add(input.value, "user");
+
+    // 🚫 Racisme → dehors
+    if (racistCheck(txt)) {
+      window.location.href = "https://www.google.com";
+      return;
+    }
+
+    setTimeout(() => {
+      add(generateSentence(), "ai");
+    }, 300);
+
     input.value = "";
   }
 });
 
-add("Je suis Garry Ai, développé par Yotvin, et toujours en cours de création. Je t’écoute.", "ai");
+add("Je suis Garry Ai. Mon langage évolue à chaque échange.", "ai");
 </script>
-
 </body>
 </html>
