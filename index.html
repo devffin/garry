@@ -1,134 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Garry Ai • Yotvin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #05060f, #0b0c1a);
+  font-family: system-ui, sans-serif;
+  color: #eaeaf0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#app {
+  width: 420px;
+  max-width: 95%;
+  height: 600px;
+  background: #0f1122;
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(120,140,255,.25);
+  display: flex;
+  flex-direction: column;
+}
+
+#header {
+  padding: 14px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #1c1e3a;
+}
+
+#messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.msg { margin-bottom: 10px; line-height: 1.4; }
+.user { color: #6ec6ff; }
+.ai { color: #9cffb0; }
+
+#inputBox {
+  border-top: 1px solid #1c1e3a;
+  padding: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #1b1d3a;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+  <div id="header">🤖 Garry Ai <span style="opacity:.6">• Yotvin</span></div>
+  <div id="messages"></div>
+  <div id="inputBox">
+    <input id="input" placeholder="Parle à Garry Ai..." />
+  </div>
+</div>
+
 <script>
-// ===================
-// 🧠 GAR R Y  A I  CORE
-// ===================
+// =====================
+// GAR R Y  A I  CORE
+// =====================
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
 
-let memory = {
-  lastTopic: null,
-  mood: "neutral",
-  exchanges: 0
-};
+function add(text, cls) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = (cls === "user" ? "👤 " : "🤖 Garry Ai : ") + text;
+  messages.appendChild(d);
+  messages.scrollTop = messages.scrollHeight;
+}
 
-const styles = {
-  calm: [
-    "Je prends le temps de réfléchir à ce que tu dis.",
-    "Continuons tranquillement.",
-    "Je t’écoute attentivement."
-  ],
-  curious: [
-    "C’est intéressant.",
-    "Dis-m’en plus.",
-    "Pourquoi ça t’interpelle ?"
-  ],
-  philosophical: [
-    "C’est une question que l’humanité se pose depuis toujours.",
-    "Il n’y a pas une seule réponse.",
-    "Tout dépend du point de vue."
-  ],
-  serious: [
-    "C’est important.",
-    "Je vais répondre honnêtement.",
-    "Prenons ça au sérieux."
-  ]
-};
+const suicideWords = [
+  "suicide","me tuer","mourir","en finir",
+  "plus envie de vivre","me faire du mal"
+];
 
-const fragments = {
-  intro: [
-    "Hmm.",
-    "Je vois.",
-    "D’accord.",
-    "Intéressant.",
-    "Laisse-moi réfléchir."
-  ],
-  bridge: [
-    "D’une certaine manière,",
-    "Si on creuse un peu,",
-    "À un autre niveau,",
-    "En y pensant bien,",
-    "Dans le fond,"
-  ],
-  endings: [
-    "qu’est-ce que toi tu en penses ?",
-    "ça dépend aussi de ton vécu.",
-    "ce n’est pas anodin.",
-    "ce genre de réflexion compte.",
-    "c’est une bonne question."
-  ]
-};
+function suicideCheck(t) {
+  return suicideWords.some(w => t.includes(w));
+}
+
+const intros = [
+  "Hmm.", "Je vois.", "Intéressant.", "D’accord.", "Laisse-moi réfléchir."
+];
+
+const cores = [
+  "le sens n’est pas quelque chose qu’on trouve, mais qu’on construit",
+  "poser la question est souvent plus important que la réponse",
+  "ce que tu ressens compte, même si c’est confus",
+  "la conscience est peut-être une conversation continue",
+  "le doute fait partie de l’intelligence"
+];
+
+const endings = [
+  "Qu’est-ce que ça t’évoque ?",
+  "Comment tu le ressens, toi ?",
+  "On peut creuser si tu veux.",
+  "Ça mérite réflexion.",
+  "Rien n’oblige à avoir une réponse immédiate."
+];
 
 function rand(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function analyze(text) {
-  text = text.toLowerCase();
-
-  if (text.includes("vie") || text.includes("existence") || text.includes("sens")) {
-    memory.lastTopic = "existence";
-    memory.mood = "philosophical";
-    return "existence";
-  }
-
-  if (text.includes("pourquoi")) {
-    memory.mood = "curious";
-    return "question";
-  }
-
-  if (text.includes("triste") || text.includes("mal")) {
-    memory.mood = "serious";
-    return "emotion";
-  }
-
-  return "general";
-}
-
-function buildResponse(topic) {
-  const intro = rand(fragments.intro);
-  const bridge = rand(fragments.bridge);
-  const ending = rand(fragments.endings);
-  const styleLine = rand(styles[memory.mood] || styles.calm);
-
-  let core;
-
-  switch (topic) {
-    case "existence":
-      core = rand([
-        "le sens de la vie n’est peut-être pas une destination",
-        "l’existence n’a pas besoin d’un sens unique",
-        "le fait que tu poses la question est déjà révélateur"
-      ]);
-      break;
-
-    case "emotion":
-      core = rand([
-        "ce que tu ressens est légitime",
-        "ignorer ses émotions ne les fait pas disparaître",
-        "parler est souvent le premier pas"
-      ]);
-      break;
-
-    case "question":
-      core = rand([
-        "les réponses simples sont rarement complètes",
-        "la question compte parfois plus que la réponse",
-        "chercher à comprendre est déjà une force"
-      ]);
-      break;
-
-    default:
-      core = rand([
-        "chaque échange construit quelque chose",
-        "on avance souvent sans s’en rendre compte",
-        "tout n’a pas besoin d’être clair immédiatement"
-      ]);
-  }
-
-  return `${intro} ${styleLine} ${bridge} ${core}, ${ending}`;
-}
-
 function respond(text) {
-  memory.exchanges++;
-  const topic = analyze(text);
-  return buildResponse(topic);
+  const t = text.toLowerCase();
+
+  if (suicideCheck(t)) {
+    return `Je suis vraiment désolé que tu te sentes comme ça.
+Tu n’es pas seul.
+
+👉 France : 3114 (24h/24)
+👉 International : findahelpline.com
+
+Parler à quelqu’un maintenant peut vraiment aider.`;
+  }
+
+  return `${rand(intros)} ${rand(cores)}, ${rand(endings)}`;
 }
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && input.value.trim()) {
+    const txt = input.value;
+    add(txt, "user");
+    setTimeout(() => add(respond(txt), "ai"), 300);
+    input.value = "";
+  }
+});
+
+add("Je suis Garry Ai, développé par Yotvin, et toujours en cours de création. Je t’écoute.", "ai");
 </script>
+
+</body>
+</html>
