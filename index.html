@@ -1,47 +1,159 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Page de Texte avec Musique</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f0f0f0;
-      color: #333;
-    }
-    .content {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    iframe {
-      display: block;
-      margin: 20px auto;
-      border: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="content">
-    <h1>Bienvenue sur Garry</h1>
-    <p>
-      Voici un site web en développement, réalisé avec Devffin, SAFO, et Yotvin, 
-    </p>
-    <p>
-      ce n'est pas un site de SOCO ? Si, ca l'était, mais SAFO a racheté le site
-    </p>
+<meta charset="UTF-8">
+<title>Garry Ai • Yotvin</title>
 
-    <!-- Iframe de la musique -->
-    <iframe width="560" height="315" 
-            src="https://musiclab.chromeexperiments.com/Song-Maker/embed/4830830320549888?autoplay=1" 
-            allow="autoplay" 
-            allowfullscreen>
-    </iframe>
-  </div>
+<style>
+body {
+  background: radial-gradient(circle at top, #0f1020, #050509);
+  color: #e6e6eb;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#app {
+  width: 460px;
+  background: #11121a;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(100,120,255,0.15);
+}
+
+#header {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.msg { margin: 6px 0; line-height: 1.4; }
+.user { color: #6ec6ff; }
+.ai { color: #9cffb0; }
+
+input {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #1b1c29;
+  color: #fff;
+}
+
+canvas {
+  margin-top: 10px;
+  border-radius: 10px;
+  background: #0b0b12;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+  <div id="header">🤖 Garry Ai <span style="opacity:.6">• Yotvin</span></div>
+  <div id="messages"></div>
+  <input id="input" placeholder="Parle à Garry Ai..." />
+  <canvas id="canvas" width="420" height="200"></canvas>
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function addMsg(text, sender) {
+  const div = document.createElement("div");
+  div.className = "msg " + sender;
+  div.textContent = (sender === "user" ? "👤 " : "🤖 Garry Ai : ") + text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// 🛟 Détection prévention suicide
+function suicideDetected(text) {
+  const keywords = [
+    "suicide", "me tuer", "me suicider",
+    "plus envie de vivre", "mourir",
+    "me faire du mal", "en finir"
+  ];
+  return keywords.some(k => text.includes(k));
+}
+
+// 🧠 Réponses profondes
+function deepThought() {
+  const thoughts = [
+    "La conscience est peut-être simplement l’univers qui se regarde lui-même.",
+    "Même dans l’obscurité, continuer à exister est déjà une victoire.",
+    "Le sens n’est pas donné. Il se crée, lentement, par nos choix.",
+    "La souffrance ne définit pas qui tu es. Elle décrit ce que tu traverses."
+  ];
+  return thoughts[Math.floor(Math.random() * thoughts.length)];
+}
+
+// 🎨 Image symbolique
+function generateImage(prompt) {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#0e0f1a";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = "#9cffb0";
+  ctx.font = "16px monospace";
+  ctx.fillText("Garry Ai imagine :", 10, 40);
+  ctx.fillText(prompt.trim(), 10, 70);
+  ctx.fillText("[visualisation symbolique]", 10, 120);
+}
+
+function respond(text) {
+  const t = text.toLowerCase();
+
+  // 🛟 prévention
+  if (suicideDetected(t)) {
+    return `Je suis vraiment désolé que tu te sentes ainsi.
+Ta vie a de la valeur, même si tu ne la vois plus clairement maintenant.
+
+👉 France : 3114 (24h/24)
+👉 International : findahelpline.com
+
+Parler à un humain dès maintenant peut vraiment aider.`;
+  }
+
+  // 🎨 image
+  if (t.startsWith("image")) {
+    generateImage(text.replace(/image/i, ""));
+    return "J’ai généré une image symbolique basée sur ta demande 🎨";
+  }
+
+  // 🧠 profond
+  if (t.includes("vie") || t.includes("sens") || t.includes("existence")) {
+    return deepThought();
+  }
+
+  return "Je suis là. Tu peux continuer.";
+}
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && input.value.trim()) {
+    const txt = input.value;
+    addMsg(txt, "user");
+    const rep = respond(txt);
+    setTimeout(() => addMsg(rep, "ai"), 400);
+    input.value = "";
+  }
+});
+
+addMsg("Je suis Garry Ai, développé par Yotvin. Je t’écoute.", "ai");
+</script>
+
 </body>
 </html>
